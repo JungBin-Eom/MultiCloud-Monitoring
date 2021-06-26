@@ -6,8 +6,12 @@ import (
 	"time"
 )
 
+// swagger:model
 type Log struct {
-	ID          int    `json:"id"`
+	ID int `json:"id"`
+	// the type for this user
+	//
+	// required: true
 	Type        string `json:"type"`
 	CreatedOn   string `json:"created_on"`
 	Description string `json:"description"`
