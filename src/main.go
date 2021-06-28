@@ -8,28 +8,15 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/JungBin-Eom/OpenStack-Logger/handlers"
-	"github.com/go-openapi/runtime/middleware"
-	"github.com/gorilla/mux"
+	"github.com/JungBin-Eom/OpenStack-Logger/app"
 )
 
 func main() {
-	l := log.New(os.Stdout, "logger", log.LstdFlags)
-	lh := handlers.NewLogs(l)
-
-	sm := mux.NewRouter()
-
-	getRouter := sm.Methods(http.MethodGet).Subrouter()
-	getRouter.HandleFunc("/", lh.GetLogs)
-
-	opts := middleware.RedocOpts{SpecURL: "/swagger.yaml"}
-	sh := middleware.Redoc(opts, nil)
-	getRouter.Handle("/docs", sh)
-	getRouter.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
+	r := app.MakeHandler()
 
 	server := &http.Server{
 		Addr:         ":7014",
-		Handler:      sm,
+		Handler:      r,
 		IdleTimeout:  120 * time.Second,
 		ReadTimeout:  1 * time.Second,
 		WriteTimeout: 1 * time.Second,
@@ -38,7 +25,7 @@ func main() {
 	go func() {
 		err := server.ListenAndServe()
 		if err != nil {
-			l.Fatal(err)
+			log.Fatal(err)
 		}
 	}()
 
@@ -47,7 +34,7 @@ func main() {
 	signal.Notify(sigChan, os.Kill)
 
 	sig := <-sigChan
-	l.Println("Recieved terminate(shutdown) server", sig)
+	log.Println("Recieved terminate(shutdown) server", sig)
 
 	tc, _ := context.WithTimeout(context.Background(), 30*time.Second)
 	server.Shutdown(tc)

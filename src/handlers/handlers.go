@@ -15,6 +15,7 @@
 package handlers
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -37,6 +38,10 @@ func NewLogs(l *log.Logger) *MyLogs {
 	return &MyLogs{l}
 }
 
+func (m *MyLogs) IndexHandler(rw http.ResponseWriter, r *http.Request) {
+	http.Redirect(rw, r, "/index.html", http.StatusTemporaryRedirect)
+}
+
 // swagger:route GET / logs listLogs
 // Retruns a list of Logs
 // responses:
@@ -49,4 +54,9 @@ func (m *MyLogs) GetLogs(rw http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(rw, "Unable to marshal json", http.StatusInternalServerError)
 	}
+}
+
+func (m *MyLogs) GetState(rw http.ResponseWriter, r *http.Request) {
+	m.l.Println("Handle Get State")
+	fmt.Println("This is Get State")
 }
