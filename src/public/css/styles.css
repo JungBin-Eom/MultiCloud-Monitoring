@@ -7563,11 +7563,11 @@ textarea.form-control-lg {
 }
 
 .bg-light {
-  background-color: #f8f9fa !important;
+  background-color: #f8f9fa;
 }
 
 .bg-dark {
-  background-color: #212529 !important;
+  background-color: #212529;
 }
 
 .bg-body {

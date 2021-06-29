@@ -15,7 +15,6 @@
 package handlers
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -56,7 +55,17 @@ func (m *MyLogs) GetLogs(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (m *MyLogs) GetState(rw http.ResponseWriter, r *http.Request) {
-	m.l.Println("Handle Get State")
-	fmt.Println("This is Get State")
+func (m *MyLogs) LogSync(rw http.ResponseWriter, r *http.Request) {
+	m.l.Println("Handle Log Synchronizing")
+
+	// curl -XGET '15.164.210.67:9200/neutron-2021.06.29/_search?q=log_level:ERROR&pretty&filter_path=hits.hits._source.logmessage'
+
+	req, err := http.NewRequest("GET", "15.164.210.67:9200/neutron-2021.06.29/_search", nil)
+	if err != nil {
+		http.Error(rw, "Unable to get logs", http.StatusInternalServerError)
+	}
+
+	res, err := http.DefaultClient.Do(req)
+	m.l.Println(res)
+	defer res.Body.Close()
 }

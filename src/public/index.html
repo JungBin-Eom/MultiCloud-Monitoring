@@ -12,8 +12,11 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet" />
         <!-- Core theme CSS (includes Bootstrap)-->
         <link href="css/styles.css" rel="stylesheet" />
+        <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+        <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     </head>
     <body>
+        <script src="js/scripts.js"></script>
         <!-- Responsive navbar-->
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <div class="container px-lg-5">
@@ -35,7 +38,7 @@
                     <div class="m-4 m-lg-5">
                         <h1 class="display-5 fw-bold">OpenStack Componnets</h1>
                         <p class="fs-4">Make sure the components are working properly.</p>
-                        <a class="btn btn-primary btn-lg" href="#!">Log Sync</a>
+                        <a class="btn btn-primary btn-lg sync_btn" href="#!">Log Sync</a>
                     </div>
                 </div>
             </div>
@@ -46,7 +49,7 @@
                 <!-- Page Features-->
                 <div class="row gx-lg-5">
                     <div class="col-lg-6 col-xxl-4 mb-5">
-                        <div class="card bg-light border-0 h-100">
+                        <div class="card bg-light border-0 h-100 novacard">
                             <div class="card-body text-center p-4 p-lg-5 pt-0 pt-lg-0">
                                 <div class="feature bg-primary bg-gradient text-white rounded-3 mb-4 mt-n4"><img class="comp-icon" src="images/nova.png"></div>
                                 <h2 class="fs-4 fw-bold">Nova</h2>
@@ -55,7 +58,7 @@
                         </div>
                     </div>
                     <div class="col-lg-6 col-xxl-4 mb-5">
-                        <div class="card bg-light border-0 h-100">
+                        <div class="card bg-light border-0 h-100 keystonecard">
                             <div class="card-body text-center p-4 p-lg-5 pt-0 pt-lg-0">
                                 <div class="feature bg-primary bg-gradient text-white rounded-3 mb-4 mt-n4"><img class="comp-icon" src="images/keystone.png"></div>
                                 <h2 class="fs-4 fw-bold">Keystone</h2>
@@ -64,7 +67,7 @@
                         </div>
                     </div>
                     <div class="col-lg-6 col-xxl-4 mb-5">
-                        <div class="card bg-light border-0 h-100">
+                        <div class="card bg-light border-0 h-100 heatcard">
                             <div class="card-body text-center p-4 p-lg-5 pt-0 pt-lg-0">
                                 <div class="feature bg-primary bg-gradient text-white rounded-3 mb-4 mt-n4"><img class="comp-icon" src="images/heat.png"></div>
                                 <h2 class="fs-4 fw-bold">Heat</h2>
@@ -73,7 +76,7 @@
                         </div>
                     </div>
                     <div class="col-lg-6 col-xxl-4 mb-5">
-                        <div class="card bg-light border-0 h-100">
+                        <div class="card bg-light border-0 h-100 neutroncard">
                             <div class="card-body text-center p-4 p-lg-5 pt-0 pt-lg-0">
                                 <div class="feature bg-primary bg-gradient text-white rounded-3 mb-4 mt-n4"><img class="comp-icon" src="images/neutron.png"></div>
                                 <h2 class="fs-4 fw-bold">Neutron</h2>
@@ -82,7 +85,7 @@
                         </div>
                     </div>
                     <div class="col-lg-6 col-xxl-4 mb-5">
-                        <div class="card bg-light border-0 h-100">
+                        <div class="card bg-light border-0 h-100 cindercard">
                             <div class="card-body text-center p-4 p-lg-5 pt-0 pt-lg-0">
                                 <div class="feature bg-primary bg-gradient text-white rounded-3 mb-4 mt-n4"><img class="comp-icon" src="images/cinder.png"></div>
                                 <h2 class="fs-4 fw-bold">Cinder</h2>
@@ -91,7 +94,7 @@
                         </div>
                     </div>
                     <div class="col-lg-6 col-xxl-4 mb-5">
-                        <div class="card bg-light border-0 h-100">
+                        <div class="card bg-light border-0 h-100 swiftcard">
                             <div class="card-body text-center p-4 p-lg-5 pt-0 pt-lg-0">
                                 <div class="feature bg-primary bg-gradient text-white rounded-3 mb-4 mt-n4"><img class="comp-icon" src="images/swift.png"></div>
                                 <h2 class="fs-4 fw-bold">Swift</h2>

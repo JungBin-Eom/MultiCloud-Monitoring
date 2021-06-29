@@ -28,7 +28,7 @@ func MakeHandler() *AppHandler {
 	}
 
 	r.HandleFunc("/", lh.IndexHandler)
-	r.HandleFunc("/cpstate", lh.GetState).Methods("GET")
+	r.HandleFunc("/sync", lh.LogSync).Methods("GET")
 
 	opts := middleware.RedocOpts{SpecURL: "/swagger.yaml"}
 	sh := middleware.Redoc(opts, nil)
