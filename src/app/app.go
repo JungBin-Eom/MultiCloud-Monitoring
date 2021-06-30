@@ -1,6 +1,8 @@
 package app
 
 import (
+	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -14,6 +16,28 @@ import (
 type AppHandler struct {
 	http.Handler
 	db model.DBHandler
+}
+
+// template-hits, outputs-hits, listcard-source, header-field, items-나머지
+type MyLog struct {
+	Hits Hits `json:"hits"`
+}
+
+type Hits struct {
+	InHits []struct {
+		Source Source `json:"_source"`
+	} `json:"hits"`
+}
+
+type Source struct {
+	LogDate    []string `json:"log_date"`
+	LogMessage []string `json:"logmessage"`
+	Fields     Fields   `json:"fields"`
+	LogLevel   []string `json:"log_level"`
+}
+
+type Fields struct {
+	LogType string `json:"log_type"`
 }
 
 var rd *render.Render = render.New()
@@ -50,9 +74,16 @@ func (a *AppHandler) SyncLogs(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, "Unable to do request", http.StatusInternalServerError)
 		return
 	}
+
+	var logs MyLog
 	bytes, _ := ioutil.ReadAll(res.Body)
+	json.Unmarshal(bytes, &logs)
+	fmt.Println("log date    : ", logs.Hits.InHits[0].Source.LogDate[0])
+	fmt.Println("log type    : ", logs.Hits.InHits[0].Source.Fields.LogType)
+	fmt.Println("log level   : ", logs.Hits.InHits[0].Source.LogLevel[0])
+	fmt.Println("log message : ", logs.Hits.InHits[0].Source.LogMessage[0])
+
 	rd.Text(rw, http.StatusOK, string(bytes))
-	// rd.JSON(rw, http.StatusOK, data)
 }
 
 func MakeHandler(filepath string) *AppHandler {
