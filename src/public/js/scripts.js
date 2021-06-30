@@ -1,7 +1,7 @@
 (function($) {
   'use strict';
   $(function() {
-    $('.sync_btn').on("click", function(event) {
+    $('.sync_btn').off("click").on("click", function(event) {
       event.preventDefault();
 
       var today = new Date();

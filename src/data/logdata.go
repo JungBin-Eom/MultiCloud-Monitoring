@@ -6,15 +6,10 @@ import (
 	"time"
 )
 
-// swagger:model
 type Log struct {
-	ID int `json:"id"`
-	// the type for this user
-	//
-	// required: true
-	Type        string `json:"type"`
-	CreatedOn   string `json:"created_on"`
-	Description string `json:"description"`
+	CreatedOn string `json:"created_on"`
+	Type      string `json:"type"`
+	Message   string `json:"message"`
 }
 
 type Logs []*Log
@@ -30,9 +25,8 @@ func (l *Logs) ToJSON(w io.Writer) error {
 
 var logList = []*Log{
 	&Log{
-		ID:          1,
-		Type:        "DEBUG",
-		CreatedOn:   time.Now().UTC().String(),
-		Description: "This is sample log.",
+		CreatedOn: time.Now().UTC().String(),
+		Type:      "DEBUG",
+		Message:   "This is sample log.",
 	},
 }
