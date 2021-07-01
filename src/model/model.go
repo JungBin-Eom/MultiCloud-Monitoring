@@ -5,6 +5,7 @@ import (
 )
 
 type DBHandler interface {
+	GetLastTate(string) string
 	GetLogs(string) []*data.Log
 	AddLogs(data.MyLog)
 	ClearLogs(string) bool

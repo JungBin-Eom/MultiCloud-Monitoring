@@ -31,7 +31,9 @@ func (a *AppHandler) IndexHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (a *AppHandler) GetLogs(rw http.ResponseWriter, r *http.Request) {
-	logs := a.db.GetLogs("nova")
+	vars := mux.Vars(r)
+	component, _ := vars["component"]
+	logs := a.db.GetLogs(component)
 	rd.JSON(rw, http.StatusOK, logs)
 }
 
@@ -58,7 +60,19 @@ func (a *AppHandler) SyncLogs(rw http.ResponseWriter, r *http.Request) {
 	var logs data.MyLog
 	bytes, _ := ioutil.ReadAll(res.Body)
 	json.Unmarshal(bytes, &logs)
-	a.db.AddLogs(logs)
+
+	lastDate := a.db.GetLastTate("nova")
+	var sync data.MyLog
+	for _, s := range logs.Hits.InHits {
+		if err != nil {
+			http.Error(rw, "Unable to parse time", http.StatusInternalServerError)
+		}
+		if len(s.Source.LogDate) > 0 && (lastDate == "" || lastDate <= s.Source.LogDate[0]) {
+			sync.Hits.InHits = append(sync.Hits.InHits, s)
+		}
+	}
+
+	a.db.AddLogs(sync)
 	rd.Text(rw, http.StatusOK, string(bytes))
 }
 
@@ -84,8 +98,8 @@ func MakeHandler(filepath string) *AppHandler {
 	}
 
 	r.HandleFunc("/", a.IndexHandler)
-	r.HandleFunc("/getlog", a.GetLogs).Methods("GET")
 	r.HandleFunc("/sync", a.SyncLogs).Methods("GET")
+	r.HandleFunc("/{component:[a-z]+}/getlog", a.GetLogs).Methods("GET")
 	r.HandleFunc("/{component:[a-z]+}/clean", a.clearLogs).Methods("DELETE")
 
 	opts := middleware.RedocOpts{SpecURL: "/swagger.yaml"}

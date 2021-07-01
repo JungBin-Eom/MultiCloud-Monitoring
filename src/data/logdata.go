@@ -1,13 +1,6 @@
 package data
 
-import (
-	"encoding/json"
-	"io"
-	"time"
-)
-
 type Log struct {
-	ID        int    `json:"id"`
 	CreatedOn string `json:"created_on"`
 	Component string `json:"component"`
 	Level     string `json:"level"`
@@ -33,25 +26,4 @@ type Source struct {
 
 type Fields struct {
 	LogType string `json:"log_type"`
-}
-
-type Logs []*Log
-
-func GetLogs() Logs {
-	return logList
-}
-
-func (l *Logs) ToJSON(w io.Writer) error {
-	e := json.NewEncoder(w)
-	return e.Encode(l)
-}
-
-var logList = []*Log{
-	&Log{
-		ID:        1,
-		CreatedOn: time.Now().UTC().String(),
-		Component: "nova",
-		Level:     "DEBUG",
-		Message:   "This is sample log.",
-	},
 }
