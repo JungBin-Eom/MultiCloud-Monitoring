@@ -26,7 +26,6 @@ func (s *sqliteHandler) GetLastTate(component string) string {
 	rows.Next()
 	var lastTime string
 	rows.Scan(&lastTime)
-	fmt.Println(lastTime)
 	return lastTime
 }
 
