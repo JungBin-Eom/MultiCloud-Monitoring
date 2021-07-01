@@ -2,10 +2,10 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 
+	"github.com/JungBin-Eom/OpenStack-Logger/data"
 	"github.com/JungBin-Eom/OpenStack-Logger/model"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
@@ -19,26 +19,6 @@ type AppHandler struct {
 }
 
 // template-hits, outputs-hits, listcard-source, header-field, items-나머지
-type MyLog struct {
-	Hits Hits `json:"hits"`
-}
-
-type Hits struct {
-	InHits []struct {
-		Source Source `json:"_source"`
-	} `json:"hits"`
-}
-
-type Source struct {
-	LogDate    []string `json:"log_date"`
-	LogMessage []string `json:"logmessage"`
-	Fields     Fields   `json:"fields"`
-	LogLevel   []string `json:"log_level"`
-}
-
-type Fields struct {
-	LogType string `json:"log_type"`
-}
 
 var rd *render.Render = render.New()
 
@@ -51,13 +31,13 @@ func (a *AppHandler) IndexHandler(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (a *AppHandler) GetLogs(rw http.ResponseWriter, r *http.Request) {
-	logs := a.db.GetLogs()
+	logs := a.db.GetLogs("nova")
 	rd.JSON(rw, http.StatusOK, logs)
 }
 
 func (a *AppHandler) SyncLogs(rw http.ResponseWriter, r *http.Request) {
 	// curl -XGET '15.164.210.67:9200/neutron-2021.06.29/_search?q=log_level:ERROR&pretty&filter_path=hits.hits._source.logmessage'
-	req, err := http.NewRequest("GET", "http://15.164.210.67:9200/neutron-2021.06.30/_search?pretty&filter_path=hits.hits._source.log_date,hits.hits._source.fields,hits.hits._source.log_level,hits.hits._source.logmessage", nil)
+	req, err := http.NewRequest("GET", "http://15.164.210.67:9200/nova-2021.06.30/_search?pretty&filter_path=hits.hits._source.log_date,hits.hits._source.fields,hits.hits._source.log_level,hits.hits._source.logmessage", nil)
 	if err != nil {
 		http.Error(rw, "Unable to get logs", http.StatusInternalServerError)
 		return
@@ -75,15 +55,22 @@ func (a *AppHandler) SyncLogs(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var logs MyLog
+	var logs data.MyLog
 	bytes, _ := ioutil.ReadAll(res.Body)
 	json.Unmarshal(bytes, &logs)
-	fmt.Println("log date    : ", logs.Hits.InHits[0].Source.LogDate[0])
-	fmt.Println("log type    : ", logs.Hits.InHits[0].Source.Fields.LogType)
-	fmt.Println("log level   : ", logs.Hits.InHits[0].Source.LogLevel[0])
-	fmt.Println("log message : ", logs.Hits.InHits[0].Source.LogMessage[0])
-
+	a.db.AddLogs(logs)
 	rd.Text(rw, http.StatusOK, string(bytes))
+}
+
+func (a *AppHandler) clearLogs(rw http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	component, _ := vars["component"]
+	ok := a.db.ClearLogs(component)
+	if ok {
+		rd.Text(rw, http.StatusOK, "clear success")
+	} else {
+		rd.Text(rw, http.StatusOK, "clear fail")
+	}
 }
 
 func MakeHandler(filepath string) *AppHandler {
@@ -99,6 +86,7 @@ func MakeHandler(filepath string) *AppHandler {
 	r.HandleFunc("/", a.IndexHandler)
 	r.HandleFunc("/getlog", a.GetLogs).Methods("GET")
 	r.HandleFunc("/sync", a.SyncLogs).Methods("GET")
+	r.HandleFunc("/{component:[a-z]+}/clean", a.clearLogs).Methods("DELETE")
 
 	opts := middleware.RedocOpts{SpecURL: "/swagger.yaml"}
 	sh := middleware.Redoc(opts, nil)

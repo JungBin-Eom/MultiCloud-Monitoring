@@ -5,9 +5,9 @@ import (
 )
 
 type DBHandler interface {
-	GetLogs() []*data.Log
-	// AddLogs() *data.Log
-	// CleanLogs() bool
+	GetLogs(string) []*data.Log
+	AddLogs(data.MyLog)
+	ClearLogs(string) bool
 	Close()
 }
 
