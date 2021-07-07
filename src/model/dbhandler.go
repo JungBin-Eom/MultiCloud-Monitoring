@@ -17,7 +17,7 @@ func (s *sqliteHandler) Close() {
 }
 
 func (s *sqliteHandler) GetLastDate(component string) string {
-	rows, err := s.db.Query("SELECT createdOn FROM openlog WHERE component=? ORDER BY createdOn LIMIT 1", component)
+	rows, err := s.db.Query("SELECT createdOn FROM openlog WHERE component=? ORDER BY createdOn DESC LIMIT 1", component)
 	if err != nil {
 		panic(err)
 	}

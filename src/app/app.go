@@ -38,8 +38,50 @@ func (a *AppHandler) GetLogs(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (a *AppHandler) SyncLogs(rw http.ResponseWriter, r *http.Request) {
-	// curl -XGET '15.164.210.67:9200/neutron-2021.06.29/_search?q=log_level:ERROR&pretty&filter_path=hits.hits._source.logmessage'
-	req, err := http.NewRequest("GET", "http://15.164.210.67:9200/nova-2021.06.30/_search?pretty&filter_path=hits.hits._source.log_date,hits.hits._source.fields,hits.hits._source.log_level,hits.hits._source.logmessage", nil)
+	var sync data.MyLog
+	components := []string{"nova", "heat", "cinder", "neutron", "keystone", "swift"}
+	for _, com := range components {
+		req, err := http.NewRequest("GET", "http://15.164.210.67:9200/"+com+"/_search?pretty&filter_path=hits.hits._source.log_date,hits.hits._source.fields,hits.hits._source.log_level,hits.hits._source.logmessage", nil)
+		if err != nil {
+			http.Error(rw, "Unable to get logs", http.StatusInternalServerError)
+			return
+		}
+
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			http.Error(rw, "Unable to do request", http.StatusInternalServerError)
+			return
+		}
+		defer res.Body.Close()
+
+		if err != nil {
+			http.Error(rw, "Unable to do request", http.StatusInternalServerError)
+			return
+		}
+
+		var logs data.MyLog
+		bytes, _ := ioutil.ReadAll(res.Body)
+		json.Unmarshal(bytes, &logs)
+
+		lastDate := a.db.GetLastDate(com)
+		for _, s := range logs.Hits.InHits {
+			if err != nil {
+				http.Error(rw, "Unable to parse time", http.StatusInternalServerError)
+			}
+			if len(s.Source.LogDate) > 0 && (lastDate == "" || lastDate < s.Source.LogDate[0]) {
+				sync.Hits.InHits = append(sync.Hits.InHits, s)
+			}
+		}
+	}
+
+	a.db.AddLogs(sync)
+	rd.Text(rw, http.StatusOK, "ok")
+}
+
+func (a *AppHandler) clearLogs(rw http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	component, _ := vars["component"]
+	req, err := http.NewRequest("DELETE", "http://15.164.210.67:9200/"+component+"/?pretty", nil)
 	if err != nil {
 		http.Error(rw, "Unable to get logs", http.StatusInternalServerError)
 		return
@@ -51,34 +93,6 @@ func (a *AppHandler) SyncLogs(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer res.Body.Close()
-
-	if err != nil {
-		http.Error(rw, "Unable to do request", http.StatusInternalServerError)
-		return
-	}
-
-	var logs data.MyLog
-	bytes, _ := ioutil.ReadAll(res.Body)
-	json.Unmarshal(bytes, &logs)
-
-	lastDate := a.db.GetLastDate("nova")
-	var sync data.MyLog
-	for _, s := range logs.Hits.InHits {
-		if err != nil {
-			http.Error(rw, "Unable to parse time", http.StatusInternalServerError)
-		}
-		if len(s.Source.LogDate) > 0 && (lastDate == "" || lastDate <= s.Source.LogDate[0]) {
-			sync.Hits.InHits = append(sync.Hits.InHits, s)
-		}
-	}
-
-	a.db.AddLogs(sync)
-	rd.Text(rw, http.StatusOK, string(bytes))
-}
-
-func (a *AppHandler) clearLogs(rw http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	component, _ := vars["component"]
 	ok := a.db.ClearLogs(component)
 	if ok {
 		rd.Text(rw, http.StatusOK, "clear success")
