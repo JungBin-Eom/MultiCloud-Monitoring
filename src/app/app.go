@@ -78,7 +78,7 @@ func (a *AppHandler) SyncLogs(rw http.ResponseWriter, r *http.Request) {
 	rd.Text(rw, http.StatusOK, "ok")
 }
 
-func (a *AppHandler) clearLogs(rw http.ResponseWriter, r *http.Request) {
+func (a *AppHandler) ClearLogs(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	component, _ := vars["component"]
 	req, err := http.NewRequest("DELETE", "http://15.164.210.67:9200/"+component+"/?pretty", nil)
@@ -101,6 +101,10 @@ func (a *AppHandler) clearLogs(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (a *AppHandler) CheckLogs(rw http.ResponseWriter, r *http.Request) {
+
+}
+
 func MakeHandler(filepath string) *AppHandler {
 	r := mux.NewRouter()
 	neg := negroni.Classic()
@@ -114,7 +118,8 @@ func MakeHandler(filepath string) *AppHandler {
 	r.HandleFunc("/", a.IndexHandler)
 	r.HandleFunc("/sync", a.SyncLogs).Methods("GET")
 	r.HandleFunc("/{component:[a-z]+}/getlog", a.GetLogs).Methods("GET")
-	r.HandleFunc("/{component:[a-z]+}/clean", a.clearLogs).Methods("DELETE")
+	r.HandleFunc("/{component:[a-z]+}/clean", a.ClearLogs).Methods("DELETE")
+	r.HandleFunc("/{component:[a-z]+}/check", a.CheckLogs).Methods("GET")
 
 	opts := middleware.RedocOpts{SpecURL: "/swagger.yaml"}
 	sh := middleware.Redoc(opts, nil)
