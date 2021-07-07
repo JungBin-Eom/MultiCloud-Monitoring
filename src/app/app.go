@@ -61,7 +61,7 @@ func (a *AppHandler) SyncLogs(rw http.ResponseWriter, r *http.Request) {
 	bytes, _ := ioutil.ReadAll(res.Body)
 	json.Unmarshal(bytes, &logs)
 
-	lastDate := a.db.GetLastTate("nova")
+	lastDate := a.db.GetLastDate("nova")
 	var sync data.MyLog
 	for _, s := range logs.Hits.InHits {
 		if err != nil {
