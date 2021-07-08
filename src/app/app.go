@@ -102,7 +102,35 @@ func (a *AppHandler) ClearLogs(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (a *AppHandler) CheckLogs(rw http.ResponseWriter, r *http.Request) {
+	var novaerr, heaterr, cindererr, neutronerr, keystoneerr, swifterr int
+	errors := data.ComponentError{}
+	novaerr = a.db.GetError("nova")
+	heaterr = a.db.GetError("heat")
+	cindererr = a.db.GetError("cinder")
+	neutronerr = a.db.GetError("neutron")
+	keystoneerr = a.db.GetError("keystone")
+	swifterr = a.db.GetError("swift")
 
+	if novaerr != 0 {
+		errors.Nova = true
+	}
+	if heaterr != 0 {
+		errors.Heat = true
+	}
+	if cindererr != 0 {
+		errors.Cinder = true
+	}
+	if neutronerr != 0 {
+		errors.Neutron = true
+	}
+	if keystoneerr != 0 {
+		errors.Keystone = true
+	}
+	if swifterr != 0 {
+		errors.Swift = true
+	}
+
+	rd.JSON(rw, http.StatusOK, errors)
 }
 
 func MakeHandler(filepath string) *AppHandler {
@@ -119,7 +147,7 @@ func MakeHandler(filepath string) *AppHandler {
 	r.HandleFunc("/sync", a.SyncLogs).Methods("GET")
 	r.HandleFunc("/{component:[a-z]+}/getlog", a.GetLogs).Methods("GET")
 	r.HandleFunc("/{component:[a-z]+}/clean", a.ClearLogs).Methods("DELETE")
-	r.HandleFunc("/{component:[a-z]+}/check", a.CheckLogs).Methods("GET")
+	r.HandleFunc("/check", a.CheckLogs).Methods("GET")
 
 	opts := middleware.RedocOpts{SpecURL: "/swagger.yaml"}
 	sh := middleware.Redoc(opts, nil)

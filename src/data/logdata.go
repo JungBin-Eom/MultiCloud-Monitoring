@@ -27,3 +27,12 @@ type Source struct {
 type Fields struct {
 	LogType string `json:"log_type"`
 }
+
+type ComponentError struct {
+	Nova     bool `json:"nova"`
+	Heat     bool `json:"heat"`
+	Cinder   bool `json:"cinder"`
+	Neutron  bool `json:"neutron"`
+	Keystone bool `json:"keystone"`
+	Swift    bool `json:"swift"`
+}

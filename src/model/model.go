@@ -7,6 +7,7 @@ import (
 type DBHandler interface {
 	GetLastDate(string) string
 	GetLogs(string) []*data.Log
+	GetError(string) int
 	AddLogs(data.MyLog)
 	ClearLogs(string) bool
 	Close()

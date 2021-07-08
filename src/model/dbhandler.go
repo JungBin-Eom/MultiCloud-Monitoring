@@ -80,6 +80,19 @@ func (s *sqliteHandler) ClearLogs(component string) bool {
 	return count > 0
 }
 
+func (s *sqliteHandler) GetError(component string) int {
+	rows, err := s.db.Query("SELECT COUNT(*) FROM openlog WHERE component=? AND level='ERROR'", component)
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+
+	rows.Next()
+	var count int
+	rows.Scan(&count)
+	return count
+}
+
 func newSqliteHandler(filepath string) DBHandler {
 	database, err := sql.Open("sqlite3", filepath)
 	if err != nil {
