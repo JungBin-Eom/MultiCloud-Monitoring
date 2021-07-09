@@ -14,5 +14,5 @@ type DBHandler interface {
 }
 
 func NewDBHandler() DBHandler {
-	return newSqliteHandler()
+	return newPostgreHandler()
 }

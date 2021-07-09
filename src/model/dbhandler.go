@@ -18,7 +18,7 @@ func (p *postgreHandler) Close() {
 }
 
 func (p *postgreHandler) GetLastDate(component string) string {
-	rows, err := p.db.Query("SELECT createdOn FROM openlog WHERE component=? ORDER BY createdOn DESC LIMIT 1", component)
+	rows, err := p.db.Query(`SELECT createdOn FROM openlog WHERE component='` + component + `' ORDER BY createdOn DESC LIMIT 1`)
 	if err != nil {
 		panic(err)
 	}
@@ -32,7 +32,7 @@ func (p *postgreHandler) GetLastDate(component string) string {
 
 func (p *postgreHandler) GetLogs(component string) []*data.Log {
 	logs := []*data.Log{}
-	rows, err := p.db.Query("SELECT createdOn, component, level, message FROM openlog WHERE component=? ORDER BY createdOn", component)
+	rows, err := p.db.Query(`SELECT createdOn, component, level, message FROM openlog WHERE component='` + component + `' ORDER BY createdOn`)
 	if err != nil {
 		panic(err)
 	}
@@ -51,7 +51,7 @@ func (p *postgreHandler) AddLogs(logs data.MyLog) {
 	// fmt.Println("component   : ", logs.Hits.InHits[0].Source.Fields.LogType)
 	// fmt.Println("log type    : ", logs.Hits.InHits[0].Source.LogLevel[0])
 	// fmt.Println("log message : ", logs.Hits.InHits[0].Source.LogMessage[0])
-	statement, err := p.db.Prepare("INSERT INTO openlog (createdOn, component, level, message) VALUES (?, ?, ?, ?)")
+	statement, err := p.db.Prepare(`INSERT INTO openlog (createdOn, component, level, message) VALUES ($1, $2, $3, $4)`)
 	if err != nil {
 		panic(err)
 	}
@@ -82,7 +82,7 @@ func (p *postgreHandler) ClearLogs(component string) bool {
 }
 
 func (p *postgreHandler) GetError(component string) int {
-	rows, err := p.db.Query("SELECT COUNT(*) FROM openlog WHERE component=? AND level='ERROR'", component)
+	rows, err := p.db.Query("SELECT COUNT(*) FROM openlog WHERE component='" + component + "' AND level='ERROR'")
 	if err != nil {
 		panic(err)
 	}
@@ -94,18 +94,24 @@ func (p *postgreHandler) GetError(component string) int {
 	return count
 }
 
-func newSqliteHandler() DBHandler {
+func newPostgreHandler() DBHandler {
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s",
-		"cloudreamer.crrywx8kuivs.ap-northeast-2.rds.amazonaws.com", 5432, "cloudreamer", secret.DB_password, "postgres",
+		"cloudreamer.crrywx8kuivs.ap-northeast-2.rds.amazonaws.com", 5432, "cloudreamer", secret.GetDBPassword(), "postgres",
 	)
 
 	database, err := sql.Open("postgres", dsn)
 	if err != nil {
 		panic(err)
 	}
+
+	err = database.Ping()
+	if err != nil {
+		panic(err)
+	}
+
 	statement, _ := database.Prepare(
 		`CREATE TABLE IF NOT EXISTS openlog (
-				createdOn DATETIME,
+				createdOn DATE,
 				component	TEXT,
 				level 			TEXT,
 				message TEXT

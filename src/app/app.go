@@ -133,7 +133,7 @@ func (a *AppHandler) CheckLogs(rw http.ResponseWriter, r *http.Request) {
 	rd.JSON(rw, http.StatusOK, errors)
 }
 
-func MakeHandler(filepath string) *AppHandler {
+func MakeHandler() *AppHandler {
 	r := mux.NewRouter()
 	neg := negroni.Classic()
 	neg.UseHandler(r)

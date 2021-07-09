@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	r := app.MakeHandler("./test.db")
+	r := app.MakeHandler()
 
 	server := &http.Server{
 		Addr:         ":7014",
