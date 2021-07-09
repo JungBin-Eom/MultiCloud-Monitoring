@@ -5,19 +5,20 @@ import (
 	"fmt"
 
 	"github.com/JungBin-Eom/OpenStack-Logger/data"
-	_ "github.com/mattn/go-sqlite3" // _은 이 패키지를 명시적으로 사용하겠다는 의미
+	"github.com/JungBin-Eom/OpenStack-Logger/secret"
+	_ "github.com/lib/pq" // _은 이 패키지를 명시적으로 사용하겠다는 의미
 )
 
-type sqliteHandler struct {
+type postgreHandler struct {
 	db *sql.DB
 }
 
-func (s *sqliteHandler) Close() {
-	s.db.Close()
+func (p *postgreHandler) Close() {
+	p.db.Close()
 }
 
-func (s *sqliteHandler) GetLastDate(component string) string {
-	rows, err := s.db.Query("SELECT createdOn FROM openlog WHERE component=? ORDER BY createdOn DESC LIMIT 1", component)
+func (p *postgreHandler) GetLastDate(component string) string {
+	rows, err := p.db.Query("SELECT createdOn FROM openlog WHERE component=? ORDER BY createdOn DESC LIMIT 1", component)
 	if err != nil {
 		panic(err)
 	}
@@ -29,9 +30,9 @@ func (s *sqliteHandler) GetLastDate(component string) string {
 	return lastTime
 }
 
-func (s *sqliteHandler) GetLogs(component string) []*data.Log {
+func (p *postgreHandler) GetLogs(component string) []*data.Log {
 	logs := []*data.Log{}
-	rows, err := s.db.Query("SELECT createdOn, component, level, message FROM openlog WHERE component=? ORDER BY createdOn", component)
+	rows, err := p.db.Query("SELECT createdOn, component, level, message FROM openlog WHERE component=? ORDER BY createdOn", component)
 	if err != nil {
 		panic(err)
 	}
@@ -45,12 +46,12 @@ func (s *sqliteHandler) GetLogs(component string) []*data.Log {
 	return logs
 }
 
-func (s *sqliteHandler) AddLogs(logs data.MyLog) {
+func (p *postgreHandler) AddLogs(logs data.MyLog) {
 	// fmt.Println("log date    : ", logs.Hits.InHits[0].Source.LogDate[0])
 	// fmt.Println("component   : ", logs.Hits.InHits[0].Source.Fields.LogType)
 	// fmt.Println("log type    : ", logs.Hits.InHits[0].Source.LogLevel[0])
 	// fmt.Println("log message : ", logs.Hits.InHits[0].Source.LogMessage[0])
-	statement, err := s.db.Prepare("INSERT INTO openlog (createdOn, component, level, message) VALUES (?, ?, ?, ?)")
+	statement, err := p.db.Prepare("INSERT INTO openlog (createdOn, component, level, message) VALUES (?, ?, ?, ?)")
 	if err != nil {
 		panic(err)
 	}
@@ -67,8 +68,8 @@ func (s *sqliteHandler) AddLogs(logs data.MyLog) {
 	fmt.Println("added ", count, "rows")
 }
 
-func (s *sqliteHandler) ClearLogs(component string) bool {
-	statement, err := s.db.Prepare("DELETE FROM openlog WHERE component=?")
+func (p *postgreHandler) ClearLogs(component string) bool {
+	statement, err := p.db.Prepare("DELETE FROM openlog WHERE component=?")
 	if err != nil {
 		panic(err)
 	}
@@ -80,8 +81,8 @@ func (s *sqliteHandler) ClearLogs(component string) bool {
 	return count > 0
 }
 
-func (s *sqliteHandler) GetError(component string) int {
-	rows, err := s.db.Query("SELECT COUNT(*) FROM openlog WHERE component=? AND level='ERROR'", component)
+func (p *postgreHandler) GetError(component string) int {
+	rows, err := p.db.Query("SELECT COUNT(*) FROM openlog WHERE component=? AND level='ERROR'", component)
 	if err != nil {
 		panic(err)
 	}
@@ -93,8 +94,12 @@ func (s *sqliteHandler) GetError(component string) int {
 	return count
 }
 
-func newSqliteHandler(filepath string) DBHandler {
-	database, err := sql.Open("sqlite3", filepath)
+func newSqliteHandler() DBHandler {
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s",
+		"cloudreamer.crrywx8kuivs.ap-northeast-2.rds.amazonaws.com", 5432, "cloudreamer", secret.DB_password, "postgres",
+	)
+
+	database, err := sql.Open("postgres", dsn)
 	if err != nil {
 		panic(err)
 	}
@@ -106,5 +111,5 @@ func newSqliteHandler(filepath string) DBHandler {
 				message TEXT
 			);`)
 	statement.Exec()
-	return &sqliteHandler{database}
+	return &postgreHandler{database}
 }

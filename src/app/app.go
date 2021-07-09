@@ -140,7 +140,7 @@ func MakeHandler(filepath string) *AppHandler {
 
 	a := &AppHandler{
 		Handler: neg,
-		db:      model.NewDBHandler(filepath),
+		db:      model.NewDBHandler(),
 	}
 
 	r.HandleFunc("/", a.IndexHandler)
