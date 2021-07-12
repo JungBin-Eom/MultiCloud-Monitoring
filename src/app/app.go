@@ -1,6 +1,7 @@
 package app
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -18,9 +19,21 @@ type AppHandler struct {
 	db model.DBHandler
 }
 
-// template-hits, outputs-hits, listcard-source, header-field, items-나머지
+// var getSessionID = func(r *http.Request) string {
+// 	session, err := store.Get(r, "session")
+// 	if err != nil {
+// 		return ""
+// 	}
+
+// 	val := session.Values["id"]
+// 	if val == nil {
+// 		return ""
+// 	}
+// 	return val.(string)
+// }
 
 var rd *render.Render = render.New()
+var token string
 
 func (a *AppHandler) Close() {
 	a.db.Close()
@@ -133,6 +146,108 @@ func (a *AppHandler) CheckLogs(rw http.ResponseWriter, r *http.Request) {
 	rd.JSON(rw, http.StatusOK, errors)
 }
 
+func NewUnscopedTokenReq() data.TokenRequest {
+	var newReq data.TokenRequest
+	newReq.Auth.Identity.Methods = append(newReq.Auth.Identity.Methods, "password")
+	domain := &data.Domain{}
+	domain.Name = "Default"
+	newReq.Auth.Identity.Password.User.Domain = domain
+	return newReq
+}
+
+func NewScopedTokenReq() data.TokenRequest {
+	var newReq data.TokenRequest
+	newReq.Auth.Identity.Methods = append(newReq.Auth.Identity.Methods, "password")
+	return newReq
+}
+
+func (a *AppHandler) GetToken(rw http.ResponseWriter, r *http.Request) {
+	var login data.Login
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&login)
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+	}
+
+	UnscReq := NewUnscopedTokenReq()
+	name := login.Name
+	password := login.Password
+	projectId := login.ProjectId
+	UnscReq.Auth.Identity.Password.User.Name = name
+	UnscReq.Auth.Identity.Password.User.Password = password
+
+	rbytes, err := json.Marshal(UnscReq)
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+	}
+	buff := bytes.NewBuffer(rbytes)
+	res, err := http.Post("http://192.168.111.15:5000/v3/auth/tokens", "application/json", buff)
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+	}
+	defer res.Body.Close()
+
+	unscTokenBody, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+	}
+	var unscToken map[string]map[string]map[string]string
+	json.Unmarshal(unscTokenBody, &unscToken)
+	id := unscToken["token"]["user"]["id"]
+
+	ScReq := NewScopedTokenReq()
+	ScReq.Auth.Identity.Password.User.Id = id
+	ScReq.Auth.Identity.Password.User.Password = password
+	scope := &data.Scope{}
+	scope.Project.Id = projectId
+	ScReq.Auth.Scope = scope
+
+	rbytes, err = json.Marshal(ScReq)
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+	}
+	buff = bytes.NewBuffer(rbytes)
+
+	res, err = http.Post("http://192.168.111.15:5000/v3/auth/tokens", "application/json", buff)
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+	}
+	defer res.Body.Close()
+
+	token = res.Header.Get("X-Subject-Token")
+	resBody, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		http.Error(rw, "Unable to read body", http.StatusBadRequest)
+	}
+	var scopes map[string]interface{}
+	json.Unmarshal(resBody, &scopes)
+
+	rd.JSON(rw, http.StatusOK, scopes)
+}
+
+func (a *AppHandler) GetInstances(rw http.ResponseWriter, r *http.Request) {
+	projectId := r.Header.Get("project-id")
+	req, err := http.NewRequest("GET", "http://192.168.111.15:8774/v2.1/"+projectId+"/servers", nil)
+	if err != nil {
+		http.Error(rw, "Unable to get block", http.StatusBadRequest)
+	}
+	req.Header.Set("X-Auth-Token", token)
+	req.Header.Set("content-type", "application/json")
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		http.Error(rw, "Unable to do request", http.StatusInternalServerError)
+	}
+	defer res.Body.Close()
+	resBody, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		http.Error(rw, "Unable to read body", http.StatusBadRequest)
+	}
+	var instances map[string]interface{}
+	json.Unmarshal(resBody, &instances)
+	rd.JSON(rw, http.StatusOK, instances)
+}
+
 func MakeHandler() *AppHandler {
 	r := mux.NewRouter()
 	neg := negroni.Classic()
@@ -144,11 +259,18 @@ func MakeHandler() *AppHandler {
 	}
 
 	r.HandleFunc("/", a.IndexHandler)
+
+	// Logging Handlers
 	r.HandleFunc("/sync", a.SyncLogs).Methods("GET")
 	r.HandleFunc("/{component:[a-z]+}/getlog", a.GetLogs).Methods("GET")
 	r.HandleFunc("/{component:[a-z]+}/clean", a.ClearLogs).Methods("DELETE")
 	r.HandleFunc("/check", a.CheckLogs).Methods("GET")
 
+	// Monitoring Handlers
+	r.HandleFunc("/token", a.GetToken).Methods("POST")
+	r.HandleFunc("/instances", a.GetInstances).Methods("GET")
+
+	// Swagger Handlers
 	opts := middleware.RedocOpts{SpecURL: "/swagger.yaml"}
 	sh := middleware.Redoc(opts, nil)
 	r.Handle("/docs", sh)
