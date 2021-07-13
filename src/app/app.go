@@ -3,6 +3,7 @@ package app
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -215,6 +216,7 @@ func (a *AppHandler) GetToken(rw http.ResponseWriter, r *http.Request) {
 	defer res.Body.Close()
 
 	token = res.Header.Get("X-Subject-Token")
+	fmt.Println("token:", token)
 	resBody, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		http.Error(rw, "Unable to read body", http.StatusBadRequest)
@@ -248,6 +250,29 @@ func (a *AppHandler) GetInstances(rw http.ResponseWriter, r *http.Request) {
 	rd.JSON(rw, http.StatusOK, instances)
 }
 
+func (a *AppHandler) GetStatistics(rw http.ResponseWriter, r *http.Request) {
+	projectId := r.Header.Get("project-id")
+	req, err := http.NewRequest("GET", "http://192.168.111.15:8774/v2.1/"+projectId+"/os-hypervisors/statistics", nil)
+	if err != nil {
+		http.Error(rw, "Unable to get block", http.StatusBadRequest)
+	}
+	req.Header.Set("X-Auth-Token", token)
+	req.Header.Set("content-type", "application/json")
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		http.Error(rw, "Unable to do request", http.StatusInternalServerError)
+	}
+	defer res.Body.Close()
+	resBody, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		http.Error(rw, "Unable to read body", http.StatusBadRequest)
+	}
+	var myHypervisor data.Hypervisors
+	json.Unmarshal(resBody, &myHypervisor)
+	rd.JSON(rw, http.StatusOK, myHypervisor)
+}
+
 func MakeHandler() *AppHandler {
 	r := mux.NewRouter()
 	neg := negroni.Classic()
@@ -269,6 +294,7 @@ func MakeHandler() *AppHandler {
 	// Monitoring Handlers
 	r.HandleFunc("/token", a.GetToken).Methods("POST")
 	r.HandleFunc("/instances", a.GetInstances).Methods("GET")
+	r.HandleFunc("/statistics", a.GetStatistics).Methods("GET")
 
 	// Swagger Handlers
 	opts := middleware.RedocOpts{SpecURL: "/swagger.yaml"}

@@ -167,3 +167,22 @@ type Login struct {
 	Password  string `json:"password,omitempty"`
 	ProjectId string `json:"project_id"`
 }
+
+type Hypervisors struct {
+	Statistics Statistics `json:"hypervisor_statistics"`
+}
+
+type Statistics struct {
+	Count              int `json:"count"`
+	VCPUsUsed          int `json:"vcpus_used"`
+	LocalGBUsed        int `json:"local_gb_used"`
+	MemoryMB           int `json:"memory_mb"`
+	CurrentWorkload    int `json:"current_workload"`
+	VCPUs              int `json:"vcpus"`
+	RunningVMs         int `json:"running_vms"`
+	FreeDiskGB         int `json:"free_disk_gb"`
+	DiskAvailableLeast int `json:"disk_available_least"`
+	LocalGB            int `json:"local_gb"`
+	FreeRamMB          int `json:"free_ram_mb"`
+	MemoryMBUsed       int `json:"memory_mb_used"`
+}
