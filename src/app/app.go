@@ -53,7 +53,7 @@ func (a *AppHandler) GetLogs(rw http.ResponseWriter, r *http.Request) {
 
 func (a *AppHandler) SyncLogs(rw http.ResponseWriter, r *http.Request) {
 	var sync data.MyLog
-	components := []string{"nova", "heat", "cinder", "neutron", "keystone", "swift"}
+	components := []string{"nova", "heat", "cinder", "neutron", "keystone"}
 	for _, com := range components {
 		req, err := http.NewRequest("GET", "http://15.164.210.67:9200/"+com+"/_search?pretty&filter_path=hits.hits._source.log_date,hits.hits._source.fields,hits.hits._source.log_level,hits.hits._source.logmessage", nil)
 		if err != nil {
@@ -78,11 +78,13 @@ func (a *AppHandler) SyncLogs(rw http.ResponseWriter, r *http.Request) {
 		json.Unmarshal(bytes, &logs)
 
 		lastDate := a.db.GetLastDate(com)
+		fmt.Println(com, lastDate)
 		for _, s := range logs.Hits.InHits {
 			if err != nil {
 				http.Error(rw, "Unable to parse time", http.StatusInternalServerError)
 			}
 			if len(s.Source.LogDate) > 0 && (lastDate == "" || lastDate < s.Source.LogDate[0]) {
+				fmt.Println(s.Source.LogDate[0], lastDate)
 				sync.Hits.InHits = append(sync.Hits.InHits, s)
 			}
 		}

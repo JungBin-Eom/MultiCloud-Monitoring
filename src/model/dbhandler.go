@@ -69,7 +69,7 @@ func (p *postgreHandler) AddLogs(logs data.MyLog) {
 }
 
 func (p *postgreHandler) ClearLogs(component string) bool {
-	statement, err := p.db.Prepare("DELETE FROM openlog WHERE component=?")
+	statement, err := p.db.Prepare("DELETE FROM openlog WHERE component=$1")
 	if err != nil {
 		panic(err)
 	}
