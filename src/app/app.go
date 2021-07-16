@@ -53,7 +53,7 @@ func (a *AppHandler) GetLogs(rw http.ResponseWriter, r *http.Request) {
 
 func (a *AppHandler) SyncLogs(rw http.ResponseWriter, r *http.Request) {
 	var sync data.MyLog
-	components := []string{"nova", "heat", "cinder", "neutron", "keystone"}
+	components := []string{"nova", "heat", "cinder", "neutron", "keystone", "agent", "management"}
 	for _, com := range components {
 		req, err := http.NewRequest("GET", "http://15.164.210.67:9200/"+com+"/_search?pretty&filter_path=hits.hits._source.log_date,hits.hits._source.fields,hits.hits._source.log_level,hits.hits._source.logmessage", nil)
 		if err != nil {
@@ -78,13 +78,11 @@ func (a *AppHandler) SyncLogs(rw http.ResponseWriter, r *http.Request) {
 		json.Unmarshal(bytes, &logs)
 
 		lastDate := a.db.GetLastDate(com)
-		fmt.Println(com, lastDate)
 		for _, s := range logs.Hits.InHits {
 			if err != nil {
 				http.Error(rw, "Unable to parse time", http.StatusInternalServerError)
 			}
 			if len(s.Source.LogDate) > 0 && (lastDate == "" || lastDate < s.Source.LogDate[0]) {
-				fmt.Println(s.Source.LogDate[0], lastDate)
 				sync.Hits.InHits = append(sync.Hits.InHits, s)
 			}
 		}
@@ -118,7 +116,7 @@ func (a *AppHandler) ClearLogs(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (a *AppHandler) CheckLogs(rw http.ResponseWriter, r *http.Request) {
-	var novaerr, heaterr, cindererr, neutronerr, keystoneerr, swifterr int
+	var novaerr, heaterr, cindererr, neutronerr, keystoneerr, swifterr, agenterr, managemneterr int
 	errors := data.ComponentError{}
 	novaerr = a.db.GetError("nova")
 	heaterr = a.db.GetError("heat")
@@ -126,6 +124,8 @@ func (a *AppHandler) CheckLogs(rw http.ResponseWriter, r *http.Request) {
 	neutronerr = a.db.GetError("neutron")
 	keystoneerr = a.db.GetError("keystone")
 	swifterr = a.db.GetError("swift")
+	agenterr = a.db.GetError("agent")
+	managemneterr = a.db.GetError("management")
 
 	if novaerr != 0 {
 		errors.Nova = true
@@ -144,6 +144,12 @@ func (a *AppHandler) CheckLogs(rw http.ResponseWriter, r *http.Request) {
 	}
 	if swifterr != 0 {
 		errors.Swift = true
+	}
+	if agenterr != 0 {
+		errors.Agent = true
+	}
+	if managemneterr != 0 {
+		errors.Management = true
 	}
 
 	rd.JSON(rw, http.StatusOK, errors)

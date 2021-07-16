@@ -18,7 +18,7 @@ func (p *postgreHandler) Close() {
 }
 
 func (p *postgreHandler) GetLastDate(component string) string {
-	rows, err := p.db.Query(`SELECT createdOn FROM openlog WHERE component='` + component + `' ORDER BY createdOn DESC LIMIT 1`)
+	rows, err := p.db.Query(`SELECT createdOn FROM cloudlog WHERE component='` + component + `' ORDER BY createdOn DESC LIMIT 1`)
 	if err != nil {
 		panic(err)
 	}
@@ -32,7 +32,7 @@ func (p *postgreHandler) GetLastDate(component string) string {
 
 func (p *postgreHandler) GetLogs(component string) []*data.Log {
 	logs := []*data.Log{}
-	rows, err := p.db.Query(`SELECT createdOn, component, level, message FROM openlog WHERE component='` + component + `' ORDER BY createdOn`)
+	rows, err := p.db.Query(`SELECT createdOn, component, level, message FROM cloudlog WHERE component='` + component + `' ORDER BY createdOn`)
 	if err != nil {
 		panic(err)
 	}
@@ -51,7 +51,7 @@ func (p *postgreHandler) AddLogs(logs data.MyLog) {
 	// fmt.Println("component   : ", logs.Hits.InHits[0].Source.Fields.LogType)
 	// fmt.Println("log type    : ", logs.Hits.InHits[0].Source.LogLevel[0])
 	// fmt.Println("log message : ", logs.Hits.InHits[0].Source.LogMessage[0])
-	statement, err := p.db.Prepare(`INSERT INTO openlog (createdOn, component, level, message) VALUES ($1, $2, $3, $4)`)
+	statement, err := p.db.Prepare(`INSERT INTO cloudlog (createdOn, component, level, message) VALUES ($1, $2, $3, $4)`)
 	if err != nil {
 		panic(err)
 	}
@@ -69,7 +69,7 @@ func (p *postgreHandler) AddLogs(logs data.MyLog) {
 }
 
 func (p *postgreHandler) ClearLogs(component string) bool {
-	statement, err := p.db.Prepare("DELETE FROM openlog WHERE component=$1")
+	statement, err := p.db.Prepare("DELETE FROM cloudlog WHERE component=$1")
 	if err != nil {
 		panic(err)
 	}
@@ -82,7 +82,7 @@ func (p *postgreHandler) ClearLogs(component string) bool {
 }
 
 func (p *postgreHandler) GetError(component string) int {
-	rows, err := p.db.Query("SELECT COUNT(*) FROM openlog WHERE component='" + component + "' AND level='ERROR'")
+	rows, err := p.db.Query("SELECT COUNT(*) FROM cloudlog WHERE component='" + component + "' AND level='ERROR'")
 	if err != nil {
 		panic(err)
 	}
@@ -110,7 +110,7 @@ func newPostgreHandler() DBHandler {
 	}
 
 	statement, _ := database.Prepare(
-		`CREATE TABLE IF NOT EXISTS openlog (
+		`CREATE TABLE IF NOT EXISTS cloudlog (
 				createdOn DATE,
 				component	TEXT,
 				level 			TEXT,

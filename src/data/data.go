@@ -29,12 +29,14 @@ type Fields struct {
 }
 
 type ComponentError struct {
-	Nova     bool `json:"nova"`
-	Heat     bool `json:"heat"`
-	Cinder   bool `json:"cinder"`
-	Neutron  bool `json:"neutron"`
-	Keystone bool `json:"keystone"`
-	Swift    bool `json:"swift"`
+	Nova       bool `json:"nova"`
+	Heat       bool `json:"heat"`
+	Cinder     bool `json:"cinder"`
+	Neutron    bool `json:"neutron"`
+	Keystone   bool `json:"keystone"`
+	Swift      bool `json:"swift"`
+	Agent      bool `json:"agent"`
+	Management bool `json:"management"`
 }
 
 // // Unscoped Token Request Struct
