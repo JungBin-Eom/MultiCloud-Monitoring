@@ -170,6 +170,11 @@ type Login struct {
 	ProjectId string `json:"project_id"`
 }
 
+type Metrics struct {
+	OpenStackMetrics  Hypervisors       `json:"openstack_metrics"`
+	CloudStackMetrics CloudStackMetrics `json:"cloudstack_metrics"`
+}
+
 type Hypervisors struct {
 	Statistics Statistics `json:"hypervisor_statistics"`
 }
@@ -187,4 +192,22 @@ type Statistics struct {
 	LocalGB            int `json:"local_gb"`
 	FreeRamMB          int `json:"free_ram_mb"`
 	MemoryMBUsed       int `json:"memory_mb_used"`
+}
+
+type CloudStackMetrics struct {
+	Response ListHostsMetricsResponse `json:"listhostsmetricsresponse"`
+}
+
+type ListHostsMetricsResponse struct {
+	Count int    `json:"count"`
+	Host  []Host `json:"host"`
+}
+
+type Host struct {
+	Instances         string `json:"instances"`
+	CPUTotalGhz       string `json:"cputotalghz"`
+	CPUUsedGhz        string `json:"cpuusedhgz"`
+	MemoryTotalGB     string `json:"memorytotalgb"`
+	MemoryUsedGB      string `json:"memoryusedgb"`
+	MemoryAllocatedGB string `json:"memoryallocatedgb"`
 }

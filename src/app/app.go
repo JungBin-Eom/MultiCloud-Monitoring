@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/JungBin-Eom/OpenStack-Logger/data"
 	"github.com/JungBin-Eom/OpenStack-Logger/model"
@@ -231,7 +232,6 @@ func (a *AppHandler) GetToken(rw http.ResponseWriter, r *http.Request) {
 	}
 	var scopes map[string]interface{}
 	json.Unmarshal(resBody, &scopes)
-
 	rd.JSON(rw, http.StatusOK, scopes)
 }
 
@@ -259,10 +259,13 @@ func (a *AppHandler) GetInstances(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (a *AppHandler) GetStatistics(rw http.ResponseWriter, r *http.Request) {
+	var multiMetrics data.Metrics
+
 	projectId := r.Header.Get("project-id")
+
 	req, err := http.NewRequest("GET", "http://192.168.111.15:8774/v2.1/"+projectId+"/os-hypervisors/statistics", nil)
 	if err != nil {
-		http.Error(rw, "Unable to get block", http.StatusBadRequest)
+		http.Error(rw, "Unable to get openstack statistics", http.StatusBadRequest)
 	}
 	req.Header.Set("X-Auth-Token", token)
 	req.Header.Set("content-type", "application/json")
@@ -278,7 +281,45 @@ func (a *AppHandler) GetStatistics(rw http.ResponseWriter, r *http.Request) {
 	}
 	var myHypervisor data.Hypervisors
 	json.Unmarshal(resBody, &myHypervisor)
-	rd.JSON(rw, http.StatusOK, myHypervisor)
+
+	res, err = http.Post("https://tyfgmh9pg3.execute-api.ap-northeast-2.amazonaws.com/PROD/signature", "application/json", r.Body)
+	if err != nil {
+		http.Error(rw, err.Error(), http.StatusBadRequest)
+	}
+	defer res.Body.Close()
+
+	resBody, err = ioutil.ReadAll(res.Body)
+	if err != nil {
+		http.Error(rw, "Unable to read body", http.StatusBadRequest)
+	}
+
+	requestURL := string(resBody)
+	requestURL = strings.Trim(requestURL, "\"")
+	fmt.Println("http://164.125.70.26:8080/client/api?" + requestURL)
+
+	req, err = http.NewRequest("GET", "http://164.125.70.26:8080/client/api?"+requestURL, nil)
+	if err != nil {
+		http.Error(rw, "Unable to get cloudstack statistics", http.StatusBadRequest)
+	}
+	req.Header.Set("content-type", "application/json")
+
+	res, err = http.DefaultClient.Do(req)
+	if err != nil {
+		http.Error(rw, "Unable to do request", http.StatusInternalServerError)
+	}
+	defer res.Body.Close()
+	resBody, err = ioutil.ReadAll(res.Body)
+	if err != nil {
+		http.Error(rw, "Unable to read body", http.StatusBadRequest)
+	}
+
+	var cloudstackMetrics data.CloudStackMetrics
+	json.Unmarshal(resBody, &cloudstackMetrics)
+
+	multiMetrics.OpenStackMetrics = myHypervisor
+	multiMetrics.CloudStackMetrics = cloudstackMetrics
+
+	rd.JSON(rw, http.StatusOK, multiMetrics)
 }
 
 func MakeHandler() *AppHandler {
@@ -302,7 +343,7 @@ func MakeHandler() *AppHandler {
 	// Monitoring Handlers
 	r.HandleFunc("/token", a.GetToken).Methods("POST")
 	r.HandleFunc("/instances", a.GetInstances).Methods("GET")
-	r.HandleFunc("/statistics", a.GetStatistics).Methods("GET")
+	r.HandleFunc("/statistics", a.GetStatistics).Methods("POST")
 
 	// Swagger Handlers
 	opts := middleware.RedocOpts{SpecURL: "/swagger.yaml"}

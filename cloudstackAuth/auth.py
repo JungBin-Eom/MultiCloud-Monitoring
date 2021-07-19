@@ -17,9 +17,9 @@ def make_request(requests, secretKey):
 
 if __name__ == '__main__':
   requests = {
-    "apiKey": "1y7awydp1lOnJSD6GAkryit-I9xT5KAak4fMVG5qBXAmyPLlv6dXJjB9xBA4kViooCwrproKsWldvTbRx2Puag",
+    "apiKey": "0OcHRmqlLKxseRjIRoqW2sBtpIbaDDvnUElpbZVedZIVoZ1F11fcKi1n1MDGNuDWDXxBnG6Ba-jMFqSpAi5Tfg",
     "response" : "json",
     "command" : "listHostsMetrics"
   }
-  secretKey = "ZjzWOQCu1fkQOQado31rfBkk17LP0XpDTlULzMXOePMz4B94waPQytMVYkMLh6ZZC0ESdLIRDwqEs7xj-b69RQ"
+  secretKey = "xtbZVaUeYuds-ke_lCyRh0pZSdKdzUNHufwJeSvynO6847jJpWEb_aODEvsuHZ10os--xVFRAl3jepBiA33BAA"
   make_request(requests, secretKey)
