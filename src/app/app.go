@@ -21,19 +21,6 @@ type AppHandler struct {
 	db model.DBHandler
 }
 
-// var getSessionID = func(r *http.Request) string {
-// 	session, err := store.Get(r, "session")
-// 	if err != nil {
-// 		return ""
-// 	}
-
-// 	val := session.Values["id"]
-// 	if val == nil {
-// 		return ""
-// 	}
-// 	return val.(string)
-// }
-
 var rd *render.Render = render.New()
 
 func (a *AppHandler) Close() {
@@ -44,6 +31,10 @@ func (a *AppHandler) IndexHandler(rw http.ResponseWriter, r *http.Request) {
 	http.Redirect(rw, r, "/index.html", http.StatusTemporaryRedirect)
 }
 
+// swagger:route GET /{component:[a-z]+}/getlog logs listLogs
+// Returns a list of logs
+
+// GetLogs return a list of logs
 func (a *AppHandler) GetLogs(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	component, _ := vars["component"]
@@ -57,21 +48,16 @@ func (a *AppHandler) SyncLogs(rw http.ResponseWriter, r *http.Request) {
 	for _, com := range components {
 		req, err := http.NewRequest("GET", "http://15.164.210.67:9200/"+com+"/_search?pretty&filter_path=hits.hits._source.log_date,hits.hits._source.fields,hits.hits._source.log_level,hits.hits._source.logmessage", nil)
 		if err != nil {
-			http.Error(rw, "Unable to get logs", http.StatusInternalServerError)
+			http.Error(rw, "Unable to get logs", http.StatusBadRequest)
 			return
 		}
 
 		res, err := http.DefaultClient.Do(req)
 		if err != nil {
-			http.Error(rw, "Unable to do request", http.StatusInternalServerError)
+			http.Error(rw, "Unable to do request", http.StatusBadRequest)
 			return
 		}
 		defer res.Body.Close()
-
-		if err != nil {
-			http.Error(rw, "Unable to do request", http.StatusInternalServerError)
-			return
-		}
 
 		var logs data.MyLog
 		bytes, _ := ioutil.ReadAll(res.Body)
@@ -97,13 +83,13 @@ func (a *AppHandler) ClearLogs(rw http.ResponseWriter, r *http.Request) {
 	component, _ := vars["component"]
 	req, err := http.NewRequest("DELETE", "http://15.164.210.67:9200/"+component+"/?pretty", nil)
 	if err != nil {
-		http.Error(rw, "Unable to get logs", http.StatusInternalServerError)
+		http.Error(rw, "Unable to delete elasticsearch index", http.StatusBadRequest)
 		return
 	}
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		http.Error(rw, "Unable to do request", http.StatusInternalServerError)
+		http.Error(rw, "Unable to do request", http.StatusBadRequest)
 		return
 	}
 	defer res.Body.Close()
@@ -111,7 +97,7 @@ func (a *AppHandler) ClearLogs(rw http.ResponseWriter, r *http.Request) {
 	if ok {
 		rd.Text(rw, http.StatusOK, "clear success")
 	} else {
-		rd.Text(rw, http.StatusOK, "clear fail")
+		rd.Text(rw, http.StatusOK, "there is no logs")
 	}
 }
 
@@ -276,7 +262,7 @@ func (a *AppHandler) GetStatistics(rw http.ResponseWriter, r *http.Request) {
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		http.Error(rw, "Unable to do request", http.StatusInternalServerError)
+		http.Error(rw, "Unable to do request", http.StatusBadRequest)
 	}
 	defer res.Body.Close()
 	resBody, err := ioutil.ReadAll(res.Body)
@@ -309,7 +295,7 @@ func (a *AppHandler) GetStatistics(rw http.ResponseWriter, r *http.Request) {
 
 	res, err = http.DefaultClient.Do(req)
 	if err != nil {
-		http.Error(rw, "Unable to do request", http.StatusInternalServerError)
+		http.Error(rw, "Unable to do request", http.StatusBadRequest)
 	}
 	defer res.Body.Close()
 	resBody, err = ioutil.ReadAll(res.Body)
@@ -320,8 +306,8 @@ func (a *AppHandler) GetStatistics(rw http.ResponseWriter, r *http.Request) {
 	var cloudstackMetrics data.CloudStackMetrics
 	json.Unmarshal(resBody, &cloudstackMetrics)
 
-	multiMetrics.OpenStackMetrics = myHypervisor
-	multiMetrics.CloudStackMetrics = cloudstackMetrics
+	multiMetrics.OpenStackMetrics = myHypervisor.Statistics
+	multiMetrics.CloudStackMetrics = cloudstackMetrics.Response
 
 	rd.JSON(rw, http.StatusOK, multiMetrics)
 }
@@ -340,8 +326,8 @@ func MakeHandler() *AppHandler {
 
 	// Logging Handlers
 	r.HandleFunc("/sync", a.SyncLogs).Methods("GET")
-	r.HandleFunc("/{component:[a-z]+}/getlog", a.GetLogs).Methods("GET")
-	r.HandleFunc("/{component:[a-z]+}/clean", a.ClearLogs).Methods("DELETE")
+	r.HandleFunc("/{component:[a-z]+}/log", a.GetLogs).Methods("GET")
+	r.HandleFunc("/{component:[a-z]+}/log", a.ClearLogs).Methods("DELETE")
 	r.HandleFunc("/check", a.CheckLogs).Methods("GET")
 
 	// Monitoring Handlers
@@ -350,10 +336,10 @@ func MakeHandler() *AppHandler {
 	r.HandleFunc("/statistics", a.GetStatistics).Methods("POST")
 
 	// Swagger Handlers
-	opts := middleware.RedocOpts{SpecURL: "/swagger.yaml"}
+	opts := middleware.RedocOpts{SpecURL: "/swagger.yml"}
 	sh := middleware.Redoc(opts, nil)
 	r.Handle("/docs", sh)
-	r.Handle("/swagger.yaml", http.FileServer(http.Dir("./")))
+	r.Handle("/swagger.yml", http.FileServer(http.Dir("./")))
 
 	return a
 }

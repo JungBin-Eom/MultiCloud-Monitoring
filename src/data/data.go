@@ -91,8 +91,8 @@ type Login struct {
 }
 
 type Metrics struct {
-	OpenStackMetrics  Hypervisors       `json:"openstack_metrics"`
-	CloudStackMetrics CloudStackMetrics `json:"cloudstack_metrics"`
+	OpenStackMetrics  Statistics               `json:"openstack_metrics"`
+	CloudStackMetrics ListHostsMetricsResponse `json:"cloudstack_metrics"`
 }
 
 type Hypervisors struct {

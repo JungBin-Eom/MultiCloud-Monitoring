@@ -1,0 +1,345 @@
+swagger: "2.0"
+info:
+  description: "This is ClouDreamer's Multicloud Logging & Monitoring system API document."
+  version: "1.0.0"
+  title: "LM API"
+  termsOfService: "http://swagger.io/terms/"
+  contact:
+    email: "ejb0329@gmail.com"
+basePath: "/"
+tags:
+- name: "logging"
+  description: "API about logging system"
+- name: "monitoring"
+  description: "API about monitoring system"
+- name: "auth"
+  description: "API about authentication"
+schemes:
+- "https"
+- "http"
+paths:
+  /sync:
+    get:
+      tags:
+      - "logging"
+      summary: "Synchronize and save logs"
+      description: "Compare the date of the last row stored in the database and the log and save it."
+      consumes:
+      - "application/json"
+      produces:
+      - "string"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            type: "string"
+            example: "ok"
+        "400":
+          description: "Bad ElasticSerach api request"
+        "500":
+          description: "Unable to parse time"
+  /{component}/log:
+    get:
+      tags:
+      - "logging"
+      summary: "Get logs of each component"
+      description: "Returns a list of logs"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "component"
+        in: "path"
+        description: "Name of component to return"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/Log"
+    delete:
+      tags:
+      - "logging"
+      summary: "Delete logs of each component"
+      description: "Delete logs"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "component"
+        in: "path"
+        description: "Name of component to delete"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "Successful operation"
+          schema:
+            type: "string"
+            example: "clear success"
+        "400":
+          description: "Unable to delete ElasticSearch index"
+  /check:
+    get:
+      tags:
+      - "logging"
+      summary: "check error component"
+      description: "Check the component where the error occurred(true: occured, false: not occured)"
+      produces:
+      - "application/json"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/ErrorComponent"
+  /token:
+    post:
+      tags:
+      - "auth"
+      summary: "Get OpenStack scoped token"
+      description: "Returns scoped token for entered user and project."
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "User login inforamtion of openstack"
+        required: true
+        schema:
+          $ref: "#/definitions/LoginOpenstack"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Token"
+        "400":
+          description: "openstack api request error"
+  /instances:
+    get:
+      tags:
+      - "monitoring"
+      summary: "Get OpenStack instance list"
+      description: "Returns OpenStack instance list(CloudStack part is not yet)"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "header"
+        name: "project_id"
+        description: "The project id of the issued token"
+        type: "string"
+        required: true
+      - in: "header"
+        name: "token"
+        type: "string"
+        required: true
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Instances"
+  /statistics:
+    post:
+      tags:
+      - "monitoring"
+      summary: "Get metrics"
+      description: "Returns statistics from OpenStack and CloudStack"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "header"
+        name: "project_id"
+        description: "The project id of the issued token"
+        type: "string"
+        required: true
+      - in: "header"
+        name: "token"
+        type: "string"
+        required: true
+      - in: "body"
+        name: "body"
+        description: "User inforamtion(key) of cloudstack"
+        required: true
+        schema:
+          $ref: "#/definitions/CloudstackReq"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Statistics"
+        "400":
+          description: "openstack and cloudstack api request error"
+        
+definitions:
+  Log:
+    type: "object"
+    properties:
+      created_on:
+        type: "string"
+      component:
+        type: "string"
+      level:
+        type: "string"
+      message:
+        type: "string"
+  ErrorComponent:
+    type: "object"
+    properties:
+      nova:
+        type: "boolean"
+        default: false
+      heat:
+        type: "boolean"
+        default: false
+      cinder:
+        type: "boolean"
+        default: false
+      neutron:
+        type: "boolean"
+        default: false
+      keystone:
+        type: "boolean"
+        default: false
+      swift:
+        type: "boolean"
+        default: false
+      agent:
+        type: "boolean"
+        default: false
+      management:
+        type: "boolean"
+        default: false
+  LoginOpenstack:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      password:
+        type: "string"
+      project_id:
+        type: "string"
+  Token:
+    type: "object"
+    properties:
+      token:
+        type: "string"
+  Instances:
+    type: "object"
+    properties:
+      servers:
+        type: "array"
+        items: 
+          $ref: "#/definitions/Server"
+      servers_links:
+        type: "array"
+        items:
+          $ref: "#/definitions/Link"
+  Server:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+      name:
+        type: "string"
+      links:
+        type: "array"
+        items: 
+          $ref: "#/definitions/Link"
+  Link:
+    type: "object"
+    properties:
+      href:
+        type: "string"
+      rel:
+        type: "string"
+  CloudstackReq:
+    type: "object"
+    properties:
+      requests:
+        type: "object"
+        properties:
+          apikey:
+            type: "string"
+          response:
+            type: "string"
+            default: "json"
+          command:
+            type: "string"
+            default: "listHostsMetrics"
+      secretKey:
+        type: "string"
+  Statistics:
+    type: "object"
+    properties:
+      openstack_metrics:
+        type: "object"
+        properties:
+          count:
+            type: "integer"
+          vcpus_used:
+            type: "integer"
+          local_gb_used:
+            type: "integer"
+          memory_mb:
+            type: "integer"
+          current_workload:
+            type: "integer"
+          vcpus:
+            type: "integer"
+          running_vms:
+            type: "integer"
+          free_disk_gb:
+            type: "integer"
+          disk_available_least:
+            type: "integer"
+          local_gb:
+            type: "integer"
+          free_ram_mb:
+            type: "integer"
+          memory_mb_used:
+            type: "integer"
+        example:
+          count: 1
+          vcpus_used: 0
+          local_gb_used: 0
+          memory_mb: 3770
+          current_workload: 0
+          vcpus: 2
+          running_vms: 0
+          free_disk_gb: 45
+          disk_available_least: 38
+          local_gb: 45
+          free_ram_mb: 3258
+          memory_mb_used: 512
+      cloudstack_metrics:
+        type: "object"
+        properties:
+          count:
+            type: "integer"
+          host:
+            type: "array"
+            items:
+              $ref: "#/definitions/CloudstackHost"
+            example:
+              instances: "0 / 0"
+              cputotalghz: "80.00 Ghz (x 1.0)"
+              cpuusedhgz: ""
+              memorytotalgb: "30.13 GB (x 1.0)"
+              memoryusedgb: "3.28 GB"
+              memoryallocatedgb: "1.75 GB"
+  CloudstackHost:
+    type: "object"
+    properties:
+      instances:
+        type: "string"
+      cputotalghz:
+        type: "string"
+      cpuusedhgz:
+        type: "string"
+      memorytotalgb:
+        type: "string"
+      memoryusedgb:
+        type: "string"
+      memoryallocatedgb:
+        type: "string"
+externalDocs:
+  description: "Find out more about Swagger"
+  url: "http://swagger.io"
