@@ -35,7 +35,6 @@ type AppHandler struct {
 // }
 
 var rd *render.Render = render.New()
-var token string
 
 func (a *AppHandler) Close() {
 	a.db.Close()
@@ -224,19 +223,23 @@ func (a *AppHandler) GetToken(rw http.ResponseWriter, r *http.Request) {
 	}
 	defer res.Body.Close()
 
-	token = res.Header.Get("X-Subject-Token")
+	token := res.Header.Get("X-Subject-Token")
 	fmt.Println("token:", token)
-	resBody, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		http.Error(rw, "Unable to read body", http.StatusBadRequest)
+	// resBody, err := ioutil.ReadAll(res.Body)
+	// if err != nil {
+	// 	http.Error(rw, "Unable to read body", http.StatusBadRequest)
+	// }
+	var tokenRes struct {
+		Token string `json:"token"`
 	}
-	var scopes map[string]interface{}
-	json.Unmarshal(resBody, &scopes)
-	rd.JSON(rw, http.StatusOK, scopes)
+	// json.Unmarshal(resBody, &scopes)
+	tokenRes.Token = token
+	rd.JSON(rw, http.StatusOK, tokenRes)
 }
 
 func (a *AppHandler) GetInstances(rw http.ResponseWriter, r *http.Request) {
 	projectId := r.Header.Get("project-id")
+	token := r.Header.Get("token")
 	req, err := http.NewRequest("GET", "http://192.168.111.15:8774/v2.1/"+projectId+"/servers", nil)
 	if err != nil {
 		http.Error(rw, "Unable to get block", http.StatusBadRequest)
@@ -262,6 +265,7 @@ func (a *AppHandler) GetStatistics(rw http.ResponseWriter, r *http.Request) {
 	var multiMetrics data.Metrics
 
 	projectId := r.Header.Get("project-id")
+	token := r.Header.Get("token")
 
 	req, err := http.NewRequest("GET", "http://192.168.111.15:8774/v2.1/"+projectId+"/os-hypervisors/statistics", nil)
 	if err != nil {
