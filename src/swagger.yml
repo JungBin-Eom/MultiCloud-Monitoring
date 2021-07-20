@@ -123,11 +123,6 @@ paths:
       - "application/json"
       parameters:
       - in: "header"
-        name: "project_id"
-        description: "The project id of the issued token"
-        type: "string"
-        required: true
-      - in: "header"
         name: "token"
         type: "string"
         required: true
@@ -145,11 +140,6 @@ paths:
       produces:
       - "application/json"
       parameters:
-      - in: "header"
-        name: "project_id"
-        description: "The project id of the issued token"
-        type: "string"
-        required: true
       - in: "header"
         name: "token"
         type: "string"

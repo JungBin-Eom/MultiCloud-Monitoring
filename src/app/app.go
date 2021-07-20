@@ -176,7 +176,7 @@ func (a *AppHandler) GetToken(rw http.ResponseWriter, r *http.Request) {
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 	}
 	buff := bytes.NewBuffer(rbytes)
-	res, err := http.Post("http://192.168.111.15:5000/v3/auth/tokens", "application/json", buff)
+	res, err := http.Post("http://164.125.70.22/identity/v3/auth/tokens", "application/json", buff)
 	if err != nil {
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 	}
@@ -203,7 +203,7 @@ func (a *AppHandler) GetToken(rw http.ResponseWriter, r *http.Request) {
 	}
 	buff = bytes.NewBuffer(rbytes)
 
-	res, err = http.Post("http://192.168.111.15:5000/v3/auth/tokens", "application/json", buff)
+	res, err = http.Post("http://164.125.70.22/identity/v3/auth/tokens", "application/json", buff)
 	if err != nil {
 		http.Error(rw, err.Error(), http.StatusBadRequest)
 	}
@@ -226,7 +226,7 @@ func (a *AppHandler) GetToken(rw http.ResponseWriter, r *http.Request) {
 func (a *AppHandler) GetInstances(rw http.ResponseWriter, r *http.Request) {
 	projectId := r.Header.Get("project-id")
 	token := r.Header.Get("token")
-	req, err := http.NewRequest("GET", "http://192.168.111.15:8774/v2.1/"+projectId+"/servers", nil)
+	req, err := http.NewRequest("GET", "http://164.125.70.22/compute/v2.1/"+projectId+"/servers", nil)
 	if err != nil {
 		http.Error(rw, "Unable to get block", http.StatusBadRequest)
 	}
@@ -250,10 +250,9 @@ func (a *AppHandler) GetInstances(rw http.ResponseWriter, r *http.Request) {
 func (a *AppHandler) GetStatistics(rw http.ResponseWriter, r *http.Request) {
 	var multiMetrics data.Metrics
 
-	projectId := r.Header.Get("project-id")
 	token := r.Header.Get("token")
 
-	req, err := http.NewRequest("GET", "http://192.168.111.15:8774/v2.1/"+projectId+"/os-hypervisors/statistics", nil)
+	req, err := http.NewRequest("GET", "http://164.125.70.22/compute/v2.1/os-hypervisors/statistics", nil)
 	if err != nil {
 		http.Error(rw, "Unable to get openstack statistics", http.StatusBadRequest)
 	}
@@ -271,6 +270,7 @@ func (a *AppHandler) GetStatistics(rw http.ResponseWriter, r *http.Request) {
 	}
 	var myHypervisor data.Hypervisors
 	json.Unmarshal(resBody, &myHypervisor)
+	fmt.Println(myHypervisor)
 
 	res, err = http.Post("https://tyfgmh9pg3.execute-api.ap-northeast-2.amazonaws.com/PROD/signature", "application/json", r.Body)
 	if err != nil {
