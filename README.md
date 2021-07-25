@@ -16,11 +16,11 @@ ELK Stack을 통해 오픈스택 컴포넌트와 클라우드스택 서버의 �
 - elasticsearch에 저장된 로그들은 index pattern을 가지고 있으며 이를 기반으로 동기화를 수행합니다.   
 - 데이터베이스에 수집한 로그를 중복되지 않도록 저장합니다.
    
-#### [GET] /{component:[a-z]+}/getlog
+#### [GET] /{component:[a-z]+}/log
 - 경로에서 입력한 component에 해당하는 로그를 데이터베이스로부터 읽어옵니다.
 - 로그 목록을 JSON 형태로 파싱하여 보여줍니다.
    
-#### [DELETE] /{component:[a-z]+}/clean
+#### [DELETE] /{component:[a-z]+}/log
 - 경로에서 입력한 component에 해당하는 로그를 데이터베이스에서 삭제합니다.
 - elasticsearch에 저장한 index도 함께 삭제합니다.
 - 에러 발생을 인지하고 문제되는 부분을 고친 후 리로드하는 역할을 수행합니다.
