@@ -224,9 +224,8 @@ func (a *AppHandler) GetToken(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (a *AppHandler) GetInstances(rw http.ResponseWriter, r *http.Request) {
-	projectId := r.Header.Get("project-id")
 	token := r.Header.Get("token")
-	req, err := http.NewRequest("GET", "http://164.125.70.22/compute/v2.1/"+projectId+"/servers", nil)
+	req, err := http.NewRequest("GET", "http://164.125.70.22/compute/v2.1/servers", nil)
 	if err != nil {
 		http.Error(rw, "Unable to get block", http.StatusBadRequest)
 	}
