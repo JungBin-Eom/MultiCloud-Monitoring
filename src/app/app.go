@@ -11,6 +11,7 @@ import (
 	"github.com/JungBin-Eom/OpenStack-Logger/data"
 	"github.com/JungBin-Eom/OpenStack-Logger/model"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/unrolled/render"
 	"github.com/urfave/negroni"
@@ -313,6 +314,13 @@ func (a *AppHandler) GetStatistics(rw http.ResponseWriter, r *http.Request) {
 
 func MakeHandler() *AppHandler {
 	r := mux.NewRouter()
+	cors := handlers.CORS(
+		handlers.AllowedHeaders([]string{"content-type"}),
+		handlers.AllowedOrigins([]string{"*"}),
+		handlers.AllowCredentials(),
+	)
+	r.Use(cors)
+
 	neg := negroni.Classic()
 	neg.UseHandler(r)
 
