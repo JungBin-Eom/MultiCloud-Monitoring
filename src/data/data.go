@@ -29,6 +29,7 @@ type Fields struct {
 }
 
 type ComponentError struct {
+	Id         int  `json:"id"`
 	Nova       bool `json:"nova"`
 	Heat       bool `json:"heat"`
 	Cinder     bool `json:"cinder"`
