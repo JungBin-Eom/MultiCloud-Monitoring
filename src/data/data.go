@@ -91,16 +91,24 @@ type Login struct {
 }
 
 type Metrics struct {
-	OpenStackMetrics  Statistics               `json:"openstack_metrics"`
-	CloudStackMetrics ListHostsMetricsResponse `json:"cloudstack_metrics"`
-}
-
-type Hypervisors struct {
-	Statistics Statistics `json:"hypervisor_statistics"`
+	OpenStackMetrics  Statistics `json:"openstack_metrics"`
+	CloudStackMetrics Statistics `json:"cloudstack_metrics"`
 }
 
 type Statistics struct {
-	Count              int `json:"count"`
+	VCPU        int `json:"vcpu"`
+	VCPUUsed    int `json:"vcpu_used"`
+	Memory      int `json:"memory"`
+	MemoryUsed  int `json:"memory_used"`
+	Storage     int `json:"storage"`
+	StorageUsed int `json:"storage_used"`
+}
+
+type Hypervisors struct {
+	Statistics OpenStackStatistics `json:"hypervisor_statistics"`
+}
+
+type OpenStackStatistics struct {
 	VCPUsUsed          int `json:"vcpus_used"`
 	LocalGBUsed        int `json:"local_gb_used"`
 	MemoryMB           int `json:"memory_mb"`
@@ -115,19 +123,21 @@ type Statistics struct {
 }
 
 type CloudStackMetrics struct {
-	Response ListHostsMetricsResponse `json:"listhostsmetricsresponse"`
+	Response ListCapacityResponse `json:"listcapacityresponse"`
 }
 
-type ListHostsMetricsResponse struct {
-	Count int    `json:"count"`
-	Host  []Host `json:"host"`
+type ListCapacityResponse struct {
+	Count    int        `json:"count"`
+	Capacity []Capacity `json:"capacity"`
 }
 
-type Host struct {
-	Instances         string `json:"instances"`
-	CPUTotalGhz       string `json:"cputotalghz"`
-	CPUUsedGhz        string `json:"cpuusedhgz"`
-	MemoryTotalGB     string `json:"memorytotalgb"`
-	MemoryUsedGB      string `json:"memoryusedgb"`
-	MemoryAllocatedGB string `json:"memoryallocatedgb"`
+type Capacity struct {
+	Type              int    `json:"type"`
+	Name              string `json:"name"`
+	ZoneId            string `json:"zoneid"`
+	ZoneName          string `json:"zonename"`
+	CapacityAllocated int    `json:"capacityalocated"`
+	CapacityUsed      int    `json:"capacityused"`
+	CapacityTotal     int    `json:"capacitytotal"`
+	PercentUsed       string `json:"percentusd"`
 }

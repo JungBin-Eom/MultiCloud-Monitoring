@@ -253,7 +253,7 @@ definitions:
             default: "json"
           command:
             type: "string"
-            default: "listHostsMetrics"
+            default: "listCapacity"
       secretKey:
         type: "string"
   Statistics:
@@ -262,74 +262,48 @@ definitions:
       openstack_metrics:
         type: "object"
         properties:
-          count:
+          vcpu:
             type: "integer"
-          vcpus_used:
+          vcpu_used:
             type: "integer"
-          local_gb_used:
+          memory:
             type: "integer"
-          memory_mb:
+          memory_used:
             type: "integer"
-          current_workload:
+          storage:
             type: "integer"
-          vcpus:
-            type: "integer"
-          running_vms:
-            type: "integer"
-          free_disk_gb:
-            type: "integer"
-          disk_available_least:
-            type: "integer"
-          local_gb:
-            type: "integer"
-          free_ram_mb:
-            type: "integer"
-          memory_mb_used:
+          storage_used:
             type: "integer"
         example:
-          count: 1
-          vcpus_used: 0
-          local_gb_used: 0
-          memory_mb: 3770
-          current_workload: 0
-          vcpus: 2
-          running_vms: 0
-          free_disk_gb: 45
-          disk_available_least: 38
-          local_gb: 45
-          free_ram_mb: 3258
-          memory_mb_used: 512
+          vcpu: 4
+          vcpu_used: 0
+          memory: 9965
+          memory_used: 512
+          storage: 48
+          storage_used: 0
       cloudstack_metrics:
         type: "object"
         properties:
-          count:
+          vcpu:
             type: "integer"
-          host:
-            type: "array"
-            items:
-              $ref: "#/definitions/CloudstackHost"
-            example:
-              instances: "0 / 0"
-              cputotalghz: "80.00 Ghz (x 1.0)"
-              cpuusedhgz: ""
-              memorytotalgb: "30.13 GB (x 1.0)"
-              memoryusedgb: "3.28 GB"
-              memoryallocatedgb: "1.75 GB"
-  CloudstackHost:
-    type: "object"
-    properties:
-      instances:
-        type: "string"
-      cputotalghz:
-        type: "string"
-      cpuusedhgz:
-        type: "string"
-      memorytotalgb:
-        type: "string"
-      memoryusedgb:
-        type: "string"
-      memoryallocatedgb:
-        type: "string"
+          vcpu_used:
+            type: "integer"
+          memory:
+            type: "integer"
+          memory_used:
+            type: "integer"
+          storage:
+            type: "integer"
+          storage_used:
+            type: "integer"
+        example:
+          vcpu: 16
+          vcpu_used: 3
+          memory: 32354942976
+          memory_used: 1879048192
+          storage: 53660876800
+          storage_used: 26289897472
+
 externalDocs:
   description: "Find out more about Swagger"
   url: "http://swagger.io"

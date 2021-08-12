@@ -3,7 +3,6 @@ package app
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -211,7 +210,7 @@ func (a *AppHandler) GetToken(rw http.ResponseWriter, r *http.Request) {
 	defer res.Body.Close()
 
 	token := res.Header.Get("X-Subject-Token")
-	fmt.Println("token:", token)
+
 	// resBody, err := ioutil.ReadAll(res.Body)
 	// if err != nil {
 	// 	http.Error(rw, "Unable to read body", http.StatusBadRequest)
@@ -268,9 +267,8 @@ func (a *AppHandler) GetStatistics(rw http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(rw, "Unable to read body", http.StatusBadRequest)
 	}
-	var myHypervisor data.Hypervisors
-	json.Unmarshal(resBody, &myHypervisor)
-	fmt.Println(myHypervisor)
+	var OpenStackMetrics data.Hypervisors
+	json.Unmarshal(resBody, &OpenStackMetrics)
 
 	res, err = http.Post("https://tyfgmh9pg3.execute-api.ap-northeast-2.amazonaws.com/PROD/signature", "application/json", r.Body)
 	if err != nil {
@@ -285,7 +283,6 @@ func (a *AppHandler) GetStatistics(rw http.ResponseWriter, r *http.Request) {
 
 	requestURL := string(resBody)
 	requestURL = strings.Trim(requestURL, "\"")
-	fmt.Println("http://164.125.70.26:8080/client/api?" + requestURL)
 
 	req, err = http.NewRequest("GET", "http://164.125.70.26:8080/client/api?"+requestURL, nil)
 	if err != nil {
@@ -306,8 +303,26 @@ func (a *AppHandler) GetStatistics(rw http.ResponseWriter, r *http.Request) {
 	var cloudstackMetrics data.CloudStackMetrics
 	json.Unmarshal(resBody, &cloudstackMetrics)
 
-	multiMetrics.OpenStackMetrics = myHypervisor.Statistics
-	multiMetrics.CloudStackMetrics = cloudstackMetrics.Response
+	var OpenStackStatistics data.Statistics
+	var CloudStackStatistics data.Statistics
+
+	OpenStackStatistics.VCPU = OpenStackMetrics.Statistics.VCPUs
+	OpenStackStatistics.VCPUUsed = OpenStackMetrics.Statistics.VCPUsUsed
+	OpenStackStatistics.Memory = OpenStackMetrics.Statistics.MemoryMB
+	OpenStackStatistics.MemoryUsed = OpenStackMetrics.Statistics.MemoryMBUsed
+	OpenStackStatistics.Storage = OpenStackMetrics.Statistics.LocalGB
+	OpenStackStatistics.StorageUsed = OpenStackMetrics.Statistics.LocalGBUsed
+
+	CloudStackStatistics.VCPU = cloudstackMetrics.Response.Capacity[8].CapacityTotal
+	CloudStackStatistics.VCPUUsed = cloudstackMetrics.Response.Capacity[8].CapacityUsed
+	CloudStackStatistics.Memory = cloudstackMetrics.Response.Capacity[0].CapacityTotal
+	CloudStackStatistics.MemoryUsed = cloudstackMetrics.Response.Capacity[0].CapacityUsed
+	CloudStackStatistics.Storage = cloudstackMetrics.Response.Capacity[2].CapacityTotal
+	CloudStackStatistics.StorageUsed = cloudstackMetrics.Response.Capacity[2].CapacityUsed
+
+	multiMetrics.OpenStackMetrics = OpenStackStatistics
+	multiMetrics.CloudStackMetrics = CloudStackStatistics
+	// multiMetrics.CloudStackMetrics = cloudstackMetrics.Response
 
 	rd.JSON(rw, http.StatusOK, multiMetrics)
 }
