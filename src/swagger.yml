@@ -173,6 +173,8 @@ definitions:
   ErrorComponent:
     type: "object"
     properties:
+      id:
+        type: "integer"
       nova:
         type: "boolean"
         default: false
@@ -259,6 +261,8 @@ definitions:
   Statistics:
     type: "object"
     properties:
+      id:
+        type: "integer"
       openstack_metrics:
         type: "object"
         properties:

@@ -92,6 +92,7 @@ type Login struct {
 }
 
 type Metrics struct {
+	Id                int        `json:"id"`
 	OpenStackMetrics  Statistics `json:"openstack_metrics"`
 	CloudStackMetrics Statistics `json:"cloudstack_metrics"`
 }
