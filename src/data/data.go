@@ -1,6 +1,7 @@
 package data
 
 type Log struct {
+	Id        int    `json:"id"`
 	CreatedOn string `json:"created_on"`
 	Component string `json:"component"`
 	Level     string `json:"level"`

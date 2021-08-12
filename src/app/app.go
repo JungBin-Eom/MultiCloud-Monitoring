@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/JungBin-Eom/OpenStack-Logger/data"
@@ -39,6 +40,13 @@ func (a *AppHandler) GetLogs(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	component, _ := vars["component"]
 	logs := a.db.GetLogs(component)
+	count := 0
+	for _, log := range logs {
+		log.Id = count
+		count += 1
+	}
+	rw.Header().Set("Access-Control-Expose-Headers", "X-Total-Count")
+	rw.Header().Set("X-Total-Count", strconv.Itoa(len(logs)))
 	rd.JSON(rw, http.StatusOK, logs)
 }
 
@@ -330,7 +338,7 @@ func (a *AppHandler) GetStatistics(rw http.ResponseWriter, r *http.Request) {
 func MakeHandler() *AppHandler {
 	r := mux.NewRouter()
 	cors := handlers.CORS(
-		handlers.AllowedHeaders([]string{"content-type"}),
+		handlers.AllowedHeaders([]string{"content-type", "x-total-count"}),
 		handlers.AllowedOrigins([]string{"*"}),
 		handlers.AllowCredentials(),
 	)
