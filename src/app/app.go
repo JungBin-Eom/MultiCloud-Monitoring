@@ -45,8 +45,9 @@ func (a *AppHandler) GetLogs(rw http.ResponseWriter, r *http.Request) {
 		log.Id = count
 		count += 1
 	}
-	start := r.Header.Get("_start")
-	end := r.Header.Get("_end")
+	params := r.URL.Query()
+	start := params.Get("_start")
+	end := params.Get("_end")
 	startIdx, _ := strconv.Atoi(start)
 	endIdx, _ := strconv.Atoi(end)
 	rw.Header().Set("Access-Control-Expose-Headers", "X-Total-Count")

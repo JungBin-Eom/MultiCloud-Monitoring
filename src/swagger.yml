@@ -52,6 +52,16 @@ paths:
         description: "Name of component to return"
         required: true
         type: "string"
+      - name: "_start"
+        in: "query"
+        description: "Start Index"
+        required: true
+        type: "integer"
+      - name: "_end"
+        in: "query"
+        description: "End index"
+        required: true
+        type: "integer"
       responses:
         "200":
           description: "Successful operation"
@@ -160,6 +170,10 @@ paths:
         
 definitions:
   Log:
+    type: "array"
+    items:
+      $ref: "#/definitions/LogDetail"
+  LogDetail:
     type: "object"
     properties:
       id:
