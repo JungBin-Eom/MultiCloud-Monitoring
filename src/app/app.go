@@ -45,9 +45,13 @@ func (a *AppHandler) GetLogs(rw http.ResponseWriter, r *http.Request) {
 		log.Id = count
 		count += 1
 	}
+	start := r.Header.Get("_start")
+	end := r.Header.Get("_end")
+	startIdx, _ := strconv.Atoi(start)
+	endIdx, _ := strconv.Atoi(end)
 	rw.Header().Set("Access-Control-Expose-Headers", "X-Total-Count")
 	rw.Header().Set("X-Total-Count", strconv.Itoa(len(logs)))
-	rd.JSON(rw, http.StatusOK, logs)
+	rd.JSON(rw, http.StatusOK, logs[startIdx:endIdx+1])
 }
 
 func (a *AppHandler) SyncLogs(rw http.ResponseWriter, r *http.Request) {
