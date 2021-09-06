@@ -19,7 +19,7 @@ type Hits struct {
 }
 
 type Source struct {
-	LogDate    []string `json:"log_date"`
+	LogDate    string   `json:"log_date"`
 	LogMessage []string `json:"logmessage"`
 	Fields     Fields   `json:"fields"`
 	LogLevel   []string `json:"log_level"`

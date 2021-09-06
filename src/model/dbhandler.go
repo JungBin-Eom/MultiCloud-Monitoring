@@ -59,7 +59,7 @@ func (p *postgreHandler) AddLogs(logs data.MyLog) {
 	for _, s := range logs.Hits.InHits {
 		if len(s.Source.LogMessage) > 0 {
 			count += 1
-			_, err := statement.Exec(s.Source.LogDate[0], s.Source.Fields.LogType, s.Source.LogLevel[0], s.Source.LogMessage[0])
+			_, err := statement.Exec(s.Source.LogDate, s.Source.Fields.LogType, s.Source.LogLevel[0], s.Source.LogMessage[0])
 			if err != nil {
 				panic(err)
 			}
