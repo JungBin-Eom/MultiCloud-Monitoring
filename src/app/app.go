@@ -81,7 +81,7 @@ func (a *AppHandler) SyncLogs(rw http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				http.Error(rw, "Unable to parse time", http.StatusInternalServerError)
 			}
-			if lastDate == "" && lastDate < s.Source.LogDate {
+			if lastDate == "" || lastDate < s.Source.LogDate {
 				sync.Hits.InHits = append(sync.Hits.InHits, s)
 			}
 		}
