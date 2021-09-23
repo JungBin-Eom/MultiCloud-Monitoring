@@ -11,7 +11,6 @@ import (
 	"github.com/JungBin-Eom/OpenStack-Logger/data"
 	"github.com/JungBin-Eom/OpenStack-Logger/model"
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/unrolled/render"
 	"github.com/urfave/negroni"
@@ -319,19 +318,19 @@ func (a *AppHandler) GetStatistics(rw http.ResponseWriter, r *http.Request) {
 	var OpenStackStatistics data.Statistics
 	var CloudStackStatistics data.Statistics
 
-	OpenStackStatistics.VCPU = OpenStackMetrics.Statistics.VCPUs
+	OpenStackStatistics.VCPU = 20
 	OpenStackStatistics.VCPUUsed = OpenStackMetrics.Statistics.VCPUsUsed
-	OpenStackStatistics.Memory = OpenStackMetrics.Statistics.MemoryMB
+	OpenStackStatistics.Memory = 48132
 	OpenStackStatistics.MemoryUsed = OpenStackMetrics.Statistics.MemoryMBUsed
-	OpenStackStatistics.Storage = OpenStackMetrics.Statistics.LocalGB
+	OpenStackStatistics.Storage = 50
 	OpenStackStatistics.StorageUsed = OpenStackMetrics.Statistics.LocalGBUsed
 
 	CloudStackStatistics.VCPU = cloudstackMetrics.Response.Capacity[8].CapacityTotal
 	CloudStackStatistics.VCPUUsed = cloudstackMetrics.Response.Capacity[8].CapacityUsed
-	CloudStackStatistics.Memory = cloudstackMetrics.Response.Capacity[0].CapacityTotal
-	CloudStackStatistics.MemoryUsed = cloudstackMetrics.Response.Capacity[0].CapacityUsed
-	CloudStackStatistics.Storage = cloudstackMetrics.Response.Capacity[2].CapacityTotal
-	CloudStackStatistics.StorageUsed = cloudstackMetrics.Response.Capacity[2].CapacityUsed
+	CloudStackStatistics.Memory = cloudstackMetrics.Response.Capacity[0].CapacityTotal / 1000000
+	CloudStackStatistics.MemoryUsed = cloudstackMetrics.Response.Capacity[0].CapacityUsed / 1000000
+	CloudStackStatistics.Storage = cloudstackMetrics.Response.Capacity[2].CapacityTotal / 1000000000
+	CloudStackStatistics.StorageUsed = cloudstackMetrics.Response.Capacity[2].CapacityUsed / 1000000000
 
 	multiMetrics.OpenStackMetrics = OpenStackStatistics
 	multiMetrics.CloudStackMetrics = CloudStackStatistics
@@ -340,14 +339,29 @@ func (a *AppHandler) GetStatistics(rw http.ResponseWriter, r *http.Request) {
 	rd.JSON(rw, http.StatusOK, multiMetrics)
 }
 
+func CORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		// Set headers
+		w.Header().Set("Access-Control-Allow-Headers", "*")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "*")
+		w.Header().Set("Allow", "*")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		// Next
+		next.ServeHTTP(w, r)
+		return
+	})
+}
+
 func MakeHandler() *AppHandler {
 	r := mux.NewRouter()
-	cors := handlers.CORS(
-		handlers.AllowedHeaders([]string{"content-type", "x-total-count"}),
-		handlers.AllowedOrigins([]string{"*"}),
-		handlers.AllowCredentials(),
-	)
-	r.Use(cors)
+	r.Use(CORS)
 
 	neg := negroni.Classic()
 	neg.UseHandler(r)
@@ -368,7 +382,7 @@ func MakeHandler() *AppHandler {
 	// Monitoring Handlers
 	r.HandleFunc("/token", a.GetToken).Methods("POST")
 	r.HandleFunc("/instances", a.GetInstances).Methods("GET")
-	r.HandleFunc("/statistics", a.GetStatistics).Methods("POST")
+	r.HandleFunc("/statistics", a.GetStatistics).Methods("POST", "OPTIONS")
 
 	// Swagger Handlers
 	opts := middleware.RedocOpts{SpecURL: "/swagger.yml"}
